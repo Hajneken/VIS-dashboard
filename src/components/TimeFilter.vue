@@ -9,7 +9,6 @@
       area
     </p>
     <svg id="TimeFilter" :width="svgWidth" :height="svgHeight">
-      <!-- <clipPath id="getRekt"><rect height="440" width="700"></rect></clipPath> -->
       <g class="chart-group" ref="chartGroup">
         <g class="axis axis-x" ref="axisX"></g>
         <g class="axis axis-y" ref="axisY"></g>
@@ -36,7 +35,7 @@ export default {
         left: 100,
       },
       loading: true,
-      years: [],
+      years: []
     };
   },
   mounted() {
@@ -141,8 +140,6 @@ export default {
     // should be years
     xScale() {
       if (this.continent === "US") {
-
-        console.log('this.years :>> ', this.years);
         return d3
           .scaleLinear()
           .domain([d3.min(this.years), d3.max(this.years)])

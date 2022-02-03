@@ -17,7 +17,12 @@
         </abbr>
       </p>
     </div>
-    <svg ref="chart" class="main-svg mb-4" :width="svgWidth" :height="svgHeight">
+    <svg
+      ref="chart"
+      class="main-svg mb-4"
+      :width="svgWidth"
+      :height="svgHeight"
+    >
       <g ref="chartContent">
         <g class="axis axis-x" ref="x"></g>
         <g class="axis axis-y" ref="y"></g>
@@ -94,7 +99,7 @@ export default {
             this.svgHeight - this.svgPadding.top - this.svgPadding.bottom,
           ],
         ])
-        .on("brush end", (e) => {
+        .on("brush start end", (e) => {
           this.addBrushedPoints(e);
         });
 
@@ -199,6 +204,56 @@ export default {
           .text(`${this.$props.labelY}`);
       }
     },
+    plotDataUS() {
+      const allStates = [];
+
+      const points = d3.select(this.$refs.points);
+      points
+        .selectAll(".point")
+        .data(this.merged)
+        .join("circle")
+        .attr("class", "point")
+        .transition()
+        .duration(250)
+        .attr("cx", (d) => {
+          return this.xScale(d.edu);
+        })
+        .attr("cy", (d) => {
+          return this.yScale(d.income);
+        })
+        .attr("data-color", (d) => {
+          // color of each state is computed here
+          let color = this.computeColor(d);
+          allStates.push({ state: d.state.replaceAll(" ", ""), color: color });
+          return color;
+        })
+        .attr("r", 4.5)
+        .attr("data-target", (d) => d.state.replaceAll(" ", ""));
+
+      // dispatch message for store with computed colors
+      this.$store.dispatch("changeAllStates", allStates);
+
+      points
+        .selectAll(".point")
+        .data(this.merged)
+        .on("mouseover", (e) => {
+          this.handleDotHover(e.target.dataset.target);
+        })
+        .on("mouseout", (e) => {
+          this.handleDotHover(e.target.dataset.target);
+        })
+        .on("click", (e) => this.handleClick(e));
+
+      points
+        .selectAll(".point-label")
+        .data(this.merged)
+        .join("text")
+        .attr("x", (d) => this.xScale(d.edu) + 1)
+        .attr("y", (d) => this.yScale(d.income) - 6)
+        .attr("id", (d) => d.state.replaceAll(" ", ""))
+        .attr("class", "point-label")
+        .text((d) => d.state);
+    },
     plotData() {
       const allStates = [];
 
@@ -266,8 +321,16 @@ export default {
       let colorIndex;
       let candidates = [];
 
-      let x = this.xScale(d.vaccinated);
-      let y = this.yScale(d.deaths);
+      let x;
+      let y;
+
+      if (this.continent === "US") {
+        x = this.xScale(d.edu);
+        y = this.yScale(d.income);
+      } else {
+        x = this.xScale(d.vaccinated);
+        y = this.yScale(d.deaths);
+      }
 
       for (let i = 0; i < this.rectangles.length; i++) {
         // Bigger than starting point and smaller than ending point
@@ -300,6 +363,12 @@ export default {
       arg.forEach((el) => {
         d3.select(`[data-target="${el.state}"]`).classed("selected", true);
       });
+    },
+    dataMax(data) {
+      return d3.max(data, (d) => d.value);
+    },
+    dataMin(data) {
+      return d3.min(data, (d) => d.value);
     },
     reset() {
       d3.selectAll("circle.point.selected").classed("selected", false);
@@ -339,54 +408,78 @@ export default {
         return this.$store.getters.allStates;
       },
     },
+    merged() {
+      return this.personalIncome.map((el, i) => {
+        return {
+          state: el.state,
+          income: parseInt(el.value),
+          edu: this.educationRates[i].value,
+        };
+      });
+    },
     allCountries: {
       get() {
         return this.$store.getters.allCountries;
       },
     },
     xScale() {
+      let domain;
+      if (this.continent === "US") {
+        domain ===
+          [
+            this.dataMin(this.educationRates) * 0.95,
+            this.dataMax(this.educationRates) * 1.05,
+          ];
+      } else {
+        domain = [
+          // d3.min(this.data.map((el) => el.vaccinated)) * 0.95,
+          0,
+          d3.max(this.processedData.map((el) => el.vaccinated)) * 1.1,
+        ];
+      }
+
       return d3
         .scaleLinear()
         .rangeRound([
           0,
           this.svgWidth - this.svgPadding.left - this.svgPadding.right,
         ])
-        .domain([
-          // d3.min(this.data.map((el) => el.vaccinated)) * 0.95,
-          0,
-          d3.max(this.processedData.map((el) => el.vaccinated)) * 1.1,
-        ]);
+        .domain(domain);
     },
     yScale() {
+      let domain;
+      if (this.continent === "US") {
+        domain = [
+          this.dataMin(this.personalIncome) * 0.95,
+          parseInt(this.dataMax(this.personalIncome)) * 1.05,
+        ];
+      } else {
+        domain = [
+          // d3.min(this.data.map((el) => el.deaths)) * 0.95,
+          0,
+          d3.max(this.processedData.map((el) => el.deaths)) * 1.1,
+        ];
+      }
       return d3
         .scaleLinear()
         .rangeRound([
           this.svgHeight - this.svgPadding.top - this.svgPadding.bottom,
           0,
         ])
-        .domain([
-          // d3.min(this.data.map((el) => el.deaths)) * 0.95,
-          0,
-          d3.max(this.processedData.map((el) => el.deaths)) * 1.1,
-        ]);
+        .domain(domain);
     },
     processedData() {
-      // TODO process, sum and stuff 31-10-21
-      // console.log('this.data :>> ', this.data);
-      // console.log('test ', this.data.filter(el => !isNaN(el.deaths)));
-      // console.log(
-      //   "this.data.filter((el) => !isNaN(el.deaths)) :>> ",
-      //   this.data.filter((el) => !isNaN(el.deaths))
-      // );
-
-      // give me all countries so that each is represented as a dot
-
       return this.data.filter(
-        (el) => !isNaN(el.deaths) && el.date === "03-12-21"
+        (el) => !isNaN(el.deaths) && el.date === "10-10-21"
       );
     },
   },
   watch: {
+    continent: {
+      handler() {
+        this.constructChart();  
+      },
+    },
     data: {
       handler() {
         this.constructChart();

@@ -1,6 +1,9 @@
 <template>
   <div id="GraphContainer" ref="lineChart">
     <h2 class="mb-4">{{ header }}</h2>
+    <p v-if="!loading">
+      Hover over and click a line to highlight and show location label.
+    </p>
     <div v-if="loading">
       <b-spinner variant="primary" label="Spinning"></b-spinner>
     </div>
@@ -40,9 +43,10 @@ export default {
   },
   methods: {
     constructChart() {
-      this.drawLines();
       this.drawXAxis();
       this.drawYAxis();
+      this.drawLines();
+      this.loading = false;
     },
     drawLines() {
       d3.select(this.$refs.linesGroup)
@@ -222,15 +226,15 @@ export default {
         return this.$store.getters.timeFrame;
       },
     },
-    // should be dates
     xScale() {
       if (this.continent === "US") {
         return d3
           .scaleLinear()
-          .domain([d3.min(this.years), d3.max(this.years)])
+          .domain([d3.min(this.dates), d3.max(this.dates)])
           .range([0, this.svgWidth]);
+      } else {
+        return d3.scaleTime().domain(this.dates).range([0, this.svgWidth]);
       }
-      return d3.scaleTime().domain(this.dates).range([0, this.svgWidth]);
     },
     yScale() {
       return d3
@@ -253,16 +257,11 @@ export default {
     },
   },
   watch: {
-    // continent: {
-    //   handler() {
-    //     // console.log('this.continent :>> ', this.continent);
-    //     this.constructChart();
-    //   },
-    // },
     raw: {
       handler() {
-        this.loading = false;
+        this.loading = true;
         this.dates = this.raw[1].data.map((el) => el.year);
+        d3.select(this.$refs.linesGroup).html("");
         this.constructChart();
       },
     },

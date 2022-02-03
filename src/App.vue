@@ -1,12 +1,14 @@
 <template>
   <div id="app">
-    <!-- <div>
-      <b-spinner variant="primary" label="Spinning"></b-spinner>
-    </div> -->
     <div class="container">
       <div class="row">
         <div class="col-12">
           <Header :assignmentNum="5" />
+          <b-alert v-model="map" show variant="danger"
+            >
+            <h3>Preview</h3>
+            <strong>Since the dataset does not contain per US state information (countries only), unrelated data are used for a demo</strong></b-alert
+          >
         </div>
       </div>
     </div>
@@ -28,7 +30,7 @@
       <div class="row">
         <div class="col-md-12">
           <!-- <YearSlider /> -->
-          <TimeFilter header="Time filter (Full Vacination)" />
+          <TimeFilter header="Full Vacination: Time filter" />
         </div>
       </div>
     </div>
@@ -36,7 +38,7 @@
       <div class="row mb-5">
         <div class="col-md-6">
           <LineChart
-            header="Full vaccination (2-doses) over time"
+            header="Full vaccination (2 doses) over time: detailed view"
             labelX="Time"
             labelY="Vaccinated people per hundered"
           />
@@ -64,13 +66,35 @@ export default {
     Header,
     Scatterplot,
     ChoroplethMap,
-    // YearSlider,
     BarChart,
     LineChart,
     TimeFilter,
   },
+  data() {
+    return {
+      map: false,
+    };
+  },
   mounted() {
     this.$store.dispatch("loadData");
+  },
+  computed: {
+    continent: {
+      get() {
+        return this.$store.getters.continent;
+      },
+    },
+  },
+  watch: {
+    continent: {
+      handler() {
+        if (this.continent === "US") {
+          this.map = true;
+        } else {
+          this.map = false;
+        }
+      },
+    },
   },
 };
 </script>
@@ -87,7 +111,7 @@ export default {
   margin-top: 20px;
 }
 
-.container.container--custom{
+.container.container--custom {
   max-width: 1300px;
 }
 </style>

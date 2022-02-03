@@ -112,6 +112,7 @@ const store = new Vuex.Store({
     selectedYear: (state) => state.selectedYear,
     selectedStates: (state) => state.selectedStates,
     allStates: (state) => state.allStates,
+    allCountries: (state) => state.allCountries,
     timeFrame: (state) => state.timeFrame,
     data: (state) => state.data,
     raw(state) {
@@ -178,11 +179,8 @@ const store = new Vuex.Store({
       }
     }
     ,
-    // educationRates
     educationRates(state) {
-      // console.log("STATE", state.educationRates)
       let result = [];
-      // TODO HERE uncomment to unbreak :)
       for (let i = 0; i < state.educationRates.length; i++) {
         if (state.selectedYear in state.educationRates[i]) {
           result.push({
@@ -191,8 +189,6 @@ const store = new Vuex.Store({
           })
         }
       }
-      // {state: 'Alabama', value: 21.1}
-
       return result;
     },
     personalIncome(state) {

@@ -2,8 +2,8 @@
   <div class="vis-component" ref="chart">
     <div class="placeholder">
       <h2>
-        Effect of vaccines on COVID-19 deaths Geographically by
-        {{ checked ? "country" : "state" }}
+        Effect of vaccines on COVID-19 by
+        {{ checked ? "country" : "state" }} in a map view
       </h2>
       <p v-bind:class="checked ? 'mb-5' : ''">
         Click on a {{ checked ? "country" : "state" }} below to highlight it on
@@ -201,7 +201,6 @@ export default {
     },
     checked: {
       handler() {
-        // TODO switch to Europe data
         this.reset();
         const continentName = this.checked ? "EU" : "US";
         this.$store.dispatch("changeContinent", continentName);
