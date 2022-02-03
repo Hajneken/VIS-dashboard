@@ -1,6 +1,6 @@
 <template>
   <div id="GraphContainer" ref="lineChart">
-    <h2 class="mb-4">{{header}}</h2>
+    <h2 class="mb-4">{{ header }}</h2>
     <div v-if="loading">
       <b-spinner variant="primary" label="Spinning"></b-spinner>
     </div>
@@ -20,7 +20,7 @@ import * as d3 from "d3";
 
 export default {
   name: "LineChart",
-  props: ["header","labelX", "labelY"],
+  props: ["header", "labelX", "labelY"],
   data() {
     return {
       svgWidth: 800,
@@ -32,12 +32,11 @@ export default {
         left: 100,
       },
       loading: true,
-      years: [],
+      dates: [],
     };
   },
   mounted() {
-    console.log("Line Chart mounted ...");
-    // this.constructChart();
+    // console.log("Line Chart mounted ...");
   },
   methods: {
     constructChart() {
@@ -160,7 +159,6 @@ export default {
         .text(`${this.$props.labelY}`);
     },
     handleTimeChange(timeInterval) {
-      // console.log("timeInterval :>> ", timeInterval);
       this.xScale.domain([timeInterval[0], timeInterval[1]]);
 
       let updateLine = d3
@@ -189,6 +187,11 @@ export default {
     },
   },
   computed: {
+    continent: {
+      get() {
+        return this.$store.getters.continent;
+      },
+    },
     educationRates: {
       get() {
         return this.$store.getters.educationRates;
@@ -219,12 +222,15 @@ export default {
         return this.$store.getters.timeFrame;
       },
     },
-    // should be years
+    // should be dates
     xScale() {
-      return d3
-        .scaleLinear()
-        .domain([d3.min(this.years), d3.max(this.years)])
-        .range([0, this.svgWidth]);
+      if (this.continent === "US") {
+        return d3
+          .scaleLinear()
+          .domain([d3.min(this.years), d3.max(this.years)])
+          .range([0, this.svgWidth]);
+      }
+      return d3.scaleTime().domain(this.dates).range([0, this.svgWidth]);
     },
     yScale() {
       return d3
@@ -238,22 +244,30 @@ export default {
       const max = d3.max(
         this.raw.map((el) => Object.values(el)[1].map((el) => el.value)).flat()
       );
-      // console.log(max);
       return max;
+    },
+    data: {
+      get() {
+        return this.$store.getters.data;
+      },
     },
   },
   watch: {
+    // continent: {
+    //   handler() {
+    //     // console.log('this.continent :>> ', this.continent);
+    //     this.constructChart();
+    //   },
+    // },
     raw: {
       handler() {
-        // console.log("YOO, new data incoming", this.raw);
         this.loading = false;
-        this.years = this.raw[1].data.map((el) => el.year);
+        this.dates = this.raw[1].data.map((el) => el.year);
         this.constructChart();
       },
     },
     selectedStates: {
       handler() {
-        // TODO here they go from
         this.handleStateActive(
           this.allStates.filter((el) => this.selectedStates.includes(el.state))
         );

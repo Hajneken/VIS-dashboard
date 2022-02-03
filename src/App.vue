@@ -3,43 +3,46 @@
     <!-- <div>
       <b-spinner variant="primary" label="Spinning"></b-spinner>
     </div> -->
-    <div class="container-fluid">
+    <div class="container">
       <div class="row">
         <div class="col-12">
           <Header :assignmentNum="5" />
         </div>
       </div>
     </div>
-    <div class="container-fluid">
+    <div class="container container--custom mb-4">
       <div class="row">
         <div class="col-md-6">
           <ChoroplethMap />
         </div>
         <div class="col-md-6">
           <Scatterplot
-            header="Cummulative share of vaccinated and infected per million"
-            labelX="Total Cases Per Million"
-            labelY="Hospitalized patients per million"
+            header="Effect of vaccines on COVID-19 deaths"
+            labelX="People vaccinated per hundred"
+            labelY="Total deaths per million"
           />
         </div>
       </div>
+    </div>
+    <div class="container container--custom">
       <div class="row">
         <div class="col-md-12">
-          <!-- TODO Transform to TimeFrame with handles -->
           <!-- <YearSlider /> -->
-          <TimeFilter header="Time Adjuster" />
+          <TimeFilter header="Time filter (Full Vacination)" />
         </div>
       </div>
+    </div>
+    <div class="container-fluid">
       <div class="row mb-5">
         <div class="col-md-6">
           <LineChart
-            header="Fully vaccinated people over time"
+            header="Full vaccination (2-doses) over time"
             labelX="Time"
-            labelY="Number of people"
+            labelY="Vaccinated people per hundered"
           />
         </div>
         <div class="col-md-6">
-          <BarChart labelY="Cumulative number of people" />
+          <BarChart header="Risk groups in population" labelY="Shares in %" />
         </div>
       </div>
     </div>
@@ -84,7 +87,7 @@ export default {
   margin-top: 20px;
 }
 
-.slider--center {
-  margin: auto 0;
+.container.container--custom{
+  max-width: 1300px;
 }
 </style>

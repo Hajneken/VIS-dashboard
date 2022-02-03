@@ -9,8 +9,15 @@
         >) over the points or <strong>click</strong> them to color states in the
         map.
       </p>
+      <p>
+        showing date:
+        <abbr
+          title="Date purposefully chosen to caputure statistics released on the same day by as many countries as possible"
+          ><strong>{{ this.processedData[0].date }}</strong>
+        </abbr>
+      </p>
     </div>
-    <svg ref="chart" class="main-svg" :width="svgWidth" :height="svgHeight">
+    <svg ref="chart" class="main-svg mb-4" :width="svgWidth" :height="svgHeight">
       <g ref="chartContent">
         <g class="axis axis-x" ref="x"></g>
         <g class="axis axis-y" ref="y"></g>
@@ -198,16 +205,16 @@ export default {
       const points = d3.select(this.$refs.points);
       points
         .selectAll(".point")
-        .data(this.data)
+        .data(this.processedData)
         .join("circle")
         .attr("class", "point")
         .transition()
         .duration(250)
         .attr("cx", (d) => {
-          return this.xScale(d.cases);
+          return this.xScale(d.vaccinated);
         })
         .attr("cy", (d) => {
-          return this.yScale(d.hospitalized);
+          return this.yScale(d.deaths);
         })
         .attr("data-color", (d) => {
           // color of each state is computed here
@@ -226,7 +233,7 @@ export default {
 
       points
         .selectAll(".point")
-        .data(this.data)
+        .data(this.processedData)
         .on("mouseover", (e) => {
           this.handleDotHover(e.target.dataset.target);
         })
@@ -237,10 +244,10 @@ export default {
 
       points
         .selectAll(".point-label")
-        .data(this.data)
+        .data(this.processedData)
         .join("text")
-        .attr("x", (d) => this.xScale(d.cases) + 1)
-        .attr("y", (d) => this.yScale(d.hospitalized) - 6)
+        .attr("x", (d) => this.xScale(d.vaccinated) + 1)
+        .attr("y", (d) => this.yScale(d.deaths) - 6)
         .attr("id", (d) => `Label${d.location.replaceAll(" ", "")}`)
         .attr("class", "point-label")
         .text((d) => d.location);
@@ -259,8 +266,8 @@ export default {
       let colorIndex;
       let candidates = [];
 
-      let x = this.xScale(d.cases);
-      let y = this.yScale(d.hospitalized);
+      let x = this.xScale(d.vaccinated);
+      let y = this.yScale(d.deaths);
 
       for (let i = 0; i < this.rectangles.length; i++) {
         // Bigger than starting point and smaller than ending point
@@ -299,7 +306,7 @@ export default {
       this.$store.dispatch("reset");
       this.constructChart();
       d3.select(this.$refs.brush).call(this.brush[0].move, null);
-      this.brush = []
+      this.brush = [];
     },
   },
   // reactive data
@@ -332,6 +339,11 @@ export default {
         return this.$store.getters.allStates;
       },
     },
+    allCountries: {
+      get() {
+        return this.$store.getters.allCountries;
+      },
+    },
     xScale() {
       return d3
         .scaleLinear()
@@ -340,14 +352,12 @@ export default {
           this.svgWidth - this.svgPadding.left - this.svgPadding.right,
         ])
         .domain([
-          // d3.min(this.data.map((el) => el.cases)) * 0.95,
+          // d3.min(this.data.map((el) => el.vaccinated)) * 0.95,
           0,
-          d3.max(this.data.map((el) => parseFloat(el.cases))) * 1.05,
+          d3.max(this.processedData.map((el) => el.vaccinated)) * 1.1,
         ]);
     },
     yScale() {
-      // console.log('d3.max(this.data.map((el) => el.hospitalized)) :>> ', d3.max(this.data.map((el) => parseFloat(el.hospitalized))));
-
       return d3
         .scaleLinear()
         .rangeRound([
@@ -355,20 +365,30 @@ export default {
           0,
         ])
         .domain([
-          // d3.min(this.data.map((el) => el.hospitalized)) * 0.95,
+          // d3.min(this.data.map((el) => el.deaths)) * 0.95,
           0,
-          d3.max(this.data.map((el) => parseFloat(el.hospitalized))) * 1.05,
+          d3.max(this.processedData.map((el) => el.deaths)) * 1.1,
         ]);
+    },
+    processedData() {
+      // TODO process, sum and stuff 31-10-21
+      // console.log('this.data :>> ', this.data);
+      // console.log('test ', this.data.filter(el => !isNaN(el.deaths)));
+      // console.log(
+      //   "this.data.filter((el) => !isNaN(el.deaths)) :>> ",
+      //   this.data.filter((el) => !isNaN(el.deaths))
+      // );
+
+      // give me all countries so that each is represented as a dot
+
+      return this.data.filter(
+        (el) => !isNaN(el.deaths) && el.date === "03-12-21"
+      );
     },
   },
   watch: {
     data: {
       handler() {
-        // cases: "64164.37"
-        // date: "29-10-21"
-        // hospitalized: "64164.37"
-        // location: "Albania"
-        // console.log("Fresh beauty new are arriving", this.data);
         this.constructChart();
       },
     },

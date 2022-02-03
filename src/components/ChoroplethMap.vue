@@ -2,7 +2,7 @@
   <div class="vis-component" ref="chart">
     <div class="placeholder">
       <h2>
-        Share of vaccinated and infected per million by
+        Effect of vaccines on COVID-19 deaths Geographically by
         {{ checked ? "country" : "state" }}
       </h2>
       <p v-bind:class="checked ? 'mb-5' : ''">
@@ -192,16 +192,8 @@ export default {
   },
   // Use this to watch for change in the data
   watch: {
-    allStates: {
-      handler() {
-        console.log("this.selectedStates :>> ", this.allStates);
-        // TODO when all states change what next?
-        // I guess when changing continents ???
-      },
-    },
     selectedStates: {
       handler() {
-        console.log("this.selectedStates :>> ", this.selectedStates);
         this.handleStateActive(
           this.allStates.filter((el) => this.selectedStates.includes(el.state))
         );
@@ -210,7 +202,8 @@ export default {
     checked: {
       handler() {
         // TODO switch to Europe data
-        const continentName = this.checked ? "EU" : "USA";
+        this.reset();
+        const continentName = this.checked ? "EU" : "US";
         this.$store.dispatch("changeContinent", continentName);
         this.drawMap();
       },

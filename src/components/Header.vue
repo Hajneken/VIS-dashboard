@@ -1,8 +1,10 @@
 <template>
-  <header>
+  <header class="d-flex justify-content-center mb-3">
     <div>
+      <h1>COVID-19 Analytics</h1>
       <b-button v-b-toggle.collapse-1 variant="primary"
-        ><b-icon icon="info-circle" variant="light"></b-icon> About <b-icon icon="chevron-down" variant="light"></b-icon
+        ><b-icon icon="info-circle" variant="light"></b-icon> About
+        <b-icon icon="chevron-down" variant="light"></b-icon
       ></b-button>
       <b-collapse id="collapse-1" class="mt-2 author">
         <b-card class="border-0">
@@ -16,6 +18,14 @@
             <li>
               student:
               <a href="mailto:a12010957@unet.univie.ac.at">Hynek Zemanec</a>
+            </li>
+            <li>
+              based on
+              <a
+                target="_blank"
+                href="https://drive.google.com/file/d/1xtnbq0rT0KsfY_f6ILBs3paXc1Z_EiMm/view?usp=sharing"
+                >design</a
+              >
             </li>
             <li>semester: WS2021</li>
             <li>
@@ -33,9 +43,12 @@
           </ul>
         </b-card>
       </b-collapse>
-    </div>
-    <div class="custom-center d-flex flex-column align-items-center">
-      <h1>COVID-19 Analytics</h1>
+      <p class="mt-2">
+        <b-badge variant="warning"
+          >Note: Due to limitations of used dataset, some countries may be
+          ommited</b-badge
+        >
+      </p>
     </div>
   </header>
 </template>
@@ -67,18 +80,13 @@ ul {
   box-shadow: 5px 6px 8px 1px #0000001f;
   display: flex;
   flex-direction: column;
-  max-width: 230px;
+  max-width: 300px;
   padding: 1.2rem;
   list-style-type: none;
-  /* margin: 0 auto; */
+  margin: 0 auto;
 }
 
 ul li {
   margin-bottom: 0.8rem;
 }
-
-.custom-center {
-  margin-left: 27%;
-}
-
 </style>

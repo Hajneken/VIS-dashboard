@@ -1,10 +1,13 @@
 <template>
   <div class="mb-5" ref="lineChart">
-    <h2 class="mb-4">{{header}}</h2>
+    <h2 class="mb-4">{{ header }}</h2>
     <div>
       <b-spinner v-if="loading" variant="primary" label="Spinning"></b-spinner>
     </div>
-    <p v-if="!loading">Adjust the time frame by grabbing handle bars at the edges of greyed out area</p>
+    <p v-if="!loading">
+      Adjust the time frame by grabbing handle bars at the edges of greyed out
+      area
+    </p>
     <svg id="TimeFilter" :width="svgWidth" :height="svgHeight">
       <!-- <clipPath id="getRekt"><rect height="440" width="700"></rect></clipPath> -->
       <g class="chart-group" ref="chartGroup">
@@ -24,7 +27,7 @@ export default {
   props: ["header"],
   data() {
     return {
-      svgWidth: 800 * 1.6,
+      svgWidth: 1000,
       svgHeight: 200,
       svgPadding: {
         top: 40,
@@ -44,7 +47,7 @@ export default {
       this.drawLines();
       this.drawXAxis();
       this.initBrush();
-      //   this.drawYAxis();
+      this.loading = false;
     },
     initBrush() {
       let brush = d3.brushX().extent([
@@ -85,18 +88,6 @@ export default {
         .attr("class", "line")
         .attr("data-target", (d) => `TimeFilter${d.state.replaceAll(" ", "")}`)
         .attr("data-location", (d) => `${d.state.replaceAll(" ", "")}`);
-
-    //   d3.select(this.$refs.linesGroup)
-    //     .selectAll(".line__label")
-    //     .data(this.raw)
-    //     .enter()
-    //     .append("text")
-    //     .attr("id", (d) => `TimeFilter${d.state.replaceAll(" ", "")}`)
-    //     .attr("x", this.svgWidth)
-    //     .attr("y", (d) => this.yScale(d.data[d.data.length - 1].value))
-    //     .attr("class", "line__label")
-    //     .append("tspan")
-    //     .text((d) => d.state);
     },
     handleStateActive(data) {
       if (data.length !== 0) {
@@ -116,26 +107,9 @@ export default {
       d3.select(this.$refs.axisX)
         .attr("transform", `translate( 0, ${this.svgHeight} )`)
         .call(d3.axisBottom(this.xScale));
-
-      d3.select(this.$refs.axisX)
-        .append("text")
-        .attr("y", -10)
-        .attr("x", this.svgWidth)
-        .attr("dy", "0.71em")
-        .attr("text-anchor", "end")
-        .attr("fill", "black")
-        .text("Time");
     },
     drawYAxis() {
-      d3.select(this.$refs.axisY)
-        .call(d3.axisLeft(this.yScale))
-        .append("text")
-        .attr("transform", "rotate(-90)")
-        .attr("y", 6)
-        .attr("dy", "0.71em")
-        .attr("text-anchor", "end")
-        .attr("fill", "black")
-        .text("Osa y in %");
+      d3.select(this.$refs.axisY).call(d3.axisLeft(this.yScale));
     },
   },
   computed: {
@@ -166,8 +140,16 @@ export default {
     },
     // should be years
     xScale() {
+      if (this.continent === "US") {
+
+        console.log('this.years :>> ', this.years);
+        return d3
+          .scaleLinear()
+          .domain([d3.min(this.years), d3.max(this.years)])
+          .range([0, this.svgWidth]);
+      }
       return d3
-        .scaleLinear()
+        .scaleTime()
         .domain([d3.min(this.years), d3.max(this.years)])
         .range([0, this.svgWidth]);
     },
@@ -188,8 +170,9 @@ export default {
   watch: {
     raw: {
       handler() {
-        this.loading = false;
+        this.loading = true;
         this.years = this.raw[1].data.map((el) => el.year);
+        d3.select(this.$refs.linesGroup).html("");
         this.constructChart();
       },
     },
@@ -262,15 +245,5 @@ svg {
   rx: 4;
   ry: 6;
 }
-
-/* .handle:after{
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translate(-50%);
-    content:'';
-    width: 10px;
-    height: 10px;
-} */
 </style>
 
