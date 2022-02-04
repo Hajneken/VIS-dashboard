@@ -10,10 +10,10 @@
         map.
       </p>
       <p v-if="!loading">
-        showing date:
+        <span v-if="this.continent !== 'US'">showing date:</span>
         <abbr
           title="Date purposefully chosen to caputure statistics released on the same day by as many countries as possible"
-          ><strong>{{ this.processedData[0].date }}</strong>
+          ><strong>{{` ${this.processedData[0].date}`}}</strong>
         </abbr>
       </p>
       <b-spinner v-if="loading" variant="primary" label="Spinning"></b-spinner>
@@ -126,7 +126,6 @@ export default {
           return cx >= x_0 && cx < x_1 && cy >= y_0 && cy < y_1;
         }
       );
-      // console.log("selected :>> ", selected);
 
       if (selected.length !== 0) {
         selected.forEach((el) => {
@@ -179,7 +178,6 @@ export default {
     },
     xAxis() {
       const selection = d3.select(this.$refs.x);
-      console.log("this.processedData :>> ", this.processedData);
       selection
         .attr(
           "transform",
@@ -217,8 +215,6 @@ export default {
     plotData() {
       const allStates = [];
 
-      console.log("using :>> ", this.processedData);
-
       const points = d3.select(this.$refs.points);
 
       points
@@ -246,7 +242,6 @@ export default {
           // color of each state is computed here
           let color = this.computeColor(d);
           if (this.continent === "US") {
-            // console.log("d :>> ", d);
             allStates.push({
               state: d.state.replaceAll(" ", ""),
               color: color,
@@ -302,7 +297,11 @@ export default {
           }
         })
         .attr("id", (d) => {
-          return `Label${d.location.replaceAll(" ", "")}`;
+          if (this.continent === "US") {
+            return `Label${d.state.replaceAll(" ", "")}`;
+          } else {
+            return `Label${d.location.replaceAll(" ", "")}`;
+          }
         })
         .attr("class", "point-label")
         .text((d) => {
@@ -380,7 +379,6 @@ export default {
       // this.brush.clear(d3.select(this.$refs.brush));
       // d3.select(this.$refs.brush).remove();
       d3.select(this.$refs.brush).call(this.brush.move, null);
-      console.log("brush :>> ", this.brush);
       d3.selectAll("circle.point.selected").classed("selected", false);
       this.$store.dispatch("reset");
       this.constructChart();
@@ -478,8 +476,6 @@ export default {
           (el) => !isNaN(el.deaths) && el.date === "10-10-21"
         );
       }
-      // console.log("this.processed :>> ", processed);
-      // console.log("this.continent :>> ", this.continent);
       return processed;
     },
     continent: {
@@ -495,9 +491,7 @@ export default {
         d3.select(this.$refs.points).html("");
         this.xAxis();
         this.yAxis();
-        console.log("Works 3");
         this.plotData();
-        console.log("Works 4");
         this.addBrush();
         this.loading = false;
       },

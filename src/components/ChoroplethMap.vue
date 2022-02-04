@@ -133,15 +133,12 @@ export default {
     },
     handleStateClick(event) {
       // highlight state
-      // console.log('event :>> ', event.target.dataset.location);
       this.$store.commit("SET_SELECTED_STATES", [
         ...this.selectedStates,
         event.target.dataset.location,
       ]);
     },
     handleStateActive(data) {
-      console.log("data :>> ", data);
-
       d3.select(this.$refs.choroplethContent)
         .selectAll("path")
         .attr("fill", "#ffffff");
@@ -156,7 +153,6 @@ export default {
         });
       } else {
         [...new Set(data)].forEach((el) => {
-          console.log("el eu :>> ", el);
           d3.select(`#${el.state.replaceAll(" ", "")}`).attr("fill", el.color);
         });
       }
@@ -202,7 +198,6 @@ export default {
   watch: {
     selectedStates: {
       handler() {
-        console.log("this.allStates :>> ", this.allStates);
         this.handleStateActive(
           this.allStates.filter((el) => this.selectedStates.includes(el.state))
         );

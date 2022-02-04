@@ -4,10 +4,12 @@
       <div class="row">
         <div class="col-12">
           <Header :assignmentNum="5" />
-          <b-alert v-model="map" show variant="danger"
-            >
+          <b-alert v-model="map" show variant="danger">
             <h3>Preview</h3>
-            <strong>Since the dataset does not contain per US state information (countries only), unrelated data are used for a demo</strong></b-alert
+            <strong
+              >Since the dataset does not contain per US state information
+              (countries only), unrelated data are used for a demo</strong
+            ></b-alert
           >
         </div>
       </div>
@@ -29,7 +31,6 @@
     <div class="container container--custom">
       <div class="row">
         <div class="col-md-12">
-          <!-- <YearSlider /> -->
           <TimeFilter header="Full Vacination: Time filter" />
         </div>
       </div>
