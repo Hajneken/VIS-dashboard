@@ -98,7 +98,6 @@ const store = new Vuex.Store({
       this.commit('SET_SELECTED_STATES', [])
     },
     changeContinent(state, payload) {
-      // best practice to properly commit a mutation
       this.commit('SET_CONTINENT', payload)
     },
     changeAllStates(state, payload) {

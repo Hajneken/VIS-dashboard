@@ -202,7 +202,7 @@ export default {
   watch: {
     selectedStates: {
       handler() {
-        console.log('this.allStates :>> ', this.allStates);
+        console.log("this.allStates :>> ", this.allStates);
         this.handleStateActive(
           this.allStates.filter((el) => this.selectedStates.includes(el.state))
         );
@@ -213,10 +213,6 @@ export default {
         this.reset();
         const continentName = this.checked ? "EU" : "US";
         this.$store.dispatch("changeContinent", continentName);
-        if(!this.checked){
-          // this.$store.commit("changeAllStates", states)
-        }
-        console.log('this.continent :>> ', this.continent);
         this.drawMap();
       },
     },

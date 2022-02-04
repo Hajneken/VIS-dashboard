@@ -77,7 +77,7 @@ export default {
     };
   },
   mounted() {
-    // this.constructChart();
+    this.constructChart();
   },
   methods: {
     constructChart() {
@@ -126,7 +126,7 @@ export default {
           return cx >= x_0 && cx < x_1 && cy >= y_0 && cy < y_1;
         }
       );
-      console.log("selected :>> ", selected);
+      // console.log("selected :>> ", selected);
 
       if (selected.length !== 0) {
         selected.forEach((el) => {
@@ -179,6 +179,7 @@ export default {
     },
     xAxis() {
       const selection = d3.select(this.$refs.x);
+      console.log("this.processedData :>> ", this.processedData);
       selection
         .attr(
           "transform",
@@ -187,6 +188,7 @@ export default {
           } )`
         )
         .call(d3.axisBottom(this.xScale));
+
       if (!document.querySelector(".x-axis")) {
         selection
           .append("text")
@@ -215,7 +217,10 @@ export default {
     plotData() {
       const allStates = [];
 
+      console.log("using :>> ", this.processedData);
+
       const points = d3.select(this.$refs.points);
+
       points
         .selectAll(".point")
         .data(this.processedData)
@@ -224,22 +229,45 @@ export default {
         .transition()
         .duration(250)
         .attr("cx", (d) => {
-          return this.xScale(d.vaccinated);
+          if (this.continent === "US") {
+            return this.xScale(d.edu);
+          } else {
+            return this.xScale(d.vaccinated);
+          }
         })
         .attr("cy", (d) => {
-          return this.yScale(d.deaths);
+          if (this.continent === "US") {
+            return this.yScale(d.income);
+          } else {
+            return this.yScale(d.deaths);
+          }
         })
         .attr("data-color", (d) => {
           // color of each state is computed here
           let color = this.computeColor(d);
-          allStates.push({
-            state: d.location.replaceAll(" ", ""),
-            color: color,
-          });
+          if (this.continent === "US") {
+            // console.log("d :>> ", d);
+            allStates.push({
+              state: d.state.replaceAll(" ", ""),
+              color: color,
+            });
+          } else {
+            allStates.push({
+              state: d.location.replaceAll(" ", ""),
+              color: color,
+            });
+          }
           return color;
         })
         .attr("r", 4.5)
-        .attr("data-target", (d) => d.location.replaceAll(" ", ""));
+        .attr("data-target", (d) => {
+          if (this.continent === "US") {
+            return d.state.replaceAll(" ", "");
+          }
+          {
+            return d.location.replaceAll(" ", "");
+          }
+        });
 
       // dispatch message for store with computed colors
       this.$store.dispatch("changeAllStates", allStates);
@@ -259,11 +287,31 @@ export default {
         .selectAll(".point-label")
         .data(this.processedData)
         .join("text")
-        .attr("x", (d) => this.xScale(d.vaccinated) + 1)
-        .attr("y", (d) => this.yScale(d.deaths) - 6)
-        .attr("id", (d) => `Label${d.location.replaceAll(" ", "")}`)
+        .attr("x", (d) => {
+          if (this.continent === "US") {
+            return this.xScale(d.edu) + 1;
+          } else {
+            return this.xScale(d.vaccinated) + 1;
+          }
+        })
+        .attr("y", (d) => {
+          if (this.continent === "US") {
+            return this.xScale(d.edu) + 1;
+          } else {
+            return this.yScale(d.deaths) - 6;
+          }
+        })
+        .attr("id", (d) => {
+          return `Label${d.location.replaceAll(" ", "")}`;
+        })
         .attr("class", "point-label")
-        .text((d) => d.location);
+        .text((d) => {
+          if (this.continent === "US") {
+            return d.state;
+          } else {
+            return d.location;
+          }
+        });
     },
     handleClick(e) {
       const target = d3.select(e.target);
@@ -369,11 +417,11 @@ export default {
       },
     },
     merged() {
-      return this.personalIncome.map((el, i) => {
+      return this.datasetY.map((el, i) => {
         return {
           state: el.state,
           income: parseInt(el.value),
-          edu: this.educationRates[i].value,
+          edu: parseInt(this.datasetX[i].value),
         };
       });
     },
@@ -385,18 +433,16 @@ export default {
     xScale() {
       let domain;
       if (this.continent === "US") {
-        domain ===
-          [
-            this.dataMin(this.educationRates) * 0.95,
-            this.dataMax(this.educationRates) * 1.05,
-          ];
+        domain = [
+          this.dataMin(this.datasetX) * 0.95,
+          this.dataMax(this.datasetX) * 1.05,
+        ];
       } else {
         domain = [
           0,
           d3.max(this.processedData.map((el) => el.vaccinated)) * 1.1,
         ];
       }
-
       return d3
         .scaleLinear()
         .rangeRound([
@@ -409,8 +455,8 @@ export default {
       let domain;
       if (this.continent === "US") {
         domain = [
-          this.dataMin(this.personalIncome) * 0.95,
-          parseInt(this.dataMax(this.personalIncome)) * 1.05,
+          this.dataMin(this.datasetY) * 0.95,
+          parseInt(this.dataMax(this.datasetY)) * 1.05,
         ];
       } else {
         domain = [0, d3.max(this.processedData.map((el) => el.deaths)) * 1.1];
@@ -424,44 +470,42 @@ export default {
         .domain(domain);
     },
     processedData() {
-      let processed = this.data.filter(
-        (el) => !isNaN(el.deaths) && el.date === "10-10-21"
-      );
-      // console.log("this.data :>> ", processed);
+      let processed;
+      if (this.continent === "US") {
+        processed = this.merged;
+      } else {
+        processed = this.data.filter(
+          (el) => !isNaN(el.deaths) && el.date === "10-10-21"
+        );
+      }
+      // console.log("this.processed :>> ", processed);
       // console.log("this.continent :>> ", this.continent);
       return processed;
     },
     continent: {
       get() {
         return this.$store.getters.continent;
-      }
+      },
     },
   },
   watch: {
     continent: {
       handler() {
-        // this.constructChart();
-        console.log("this.continent :>> ", this.continent);
+        this.loading = true;
+        d3.select(this.$refs.points).html("");
+        this.xAxis();
+        this.yAxis();
+        console.log("Works 3");
+        this.plotData();
+        console.log("Works 4");
+        this.addBrush();
+        this.loading = false;
       },
     },
     data: {
       handler() {
         this.constructChart();
       },
-    },
-    datasetY: {
-      handler() {
-        // console.log("this.datasetY :>> ", this.datasetY);
-        this.constructChart();
-      },
-      deep: true,
-    },
-    datasetX: {
-      handler() {
-        // console.log("this.datasetX :>> ", this.datasetX);
-        this.constructChart();
-      },
-      deep: true,
     },
     selectedLocations: {
       handler() {
