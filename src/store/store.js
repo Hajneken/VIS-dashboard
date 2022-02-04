@@ -24,7 +24,6 @@ const store = new Vuex.Store({
     CHANGE_SELECTED_YEAR(state, year) {
       state.selectedYear = year;
     },
-    // TODO consider changing to Location
     CHANGE_SELECTED_STATE(state, val) {
       state.selectedStates.push(val);
     },
@@ -118,7 +117,6 @@ const store = new Vuex.Store({
     raw(state) {
       if (state.continent === "US") {
         const res = state.educationRates.map(el => Object.entries(el).map(el => { return { year: el[0], value: el[1] } }))
-
         return res.map(el => {
           return {
             state: el.filter(el => el.year === "State")[0].value,

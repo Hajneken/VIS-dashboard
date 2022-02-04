@@ -9,6 +9,9 @@
         Click on a {{ checked ? "country" : "state" }} below to highlight it on
         the scatterplot.<br />
       </p>
+      <div v-if="loading">
+        <b-spinner variant="primary" label="Spinning"></b-spinner>
+      </div>
     </div>
     <svg
       id="Map"
@@ -60,6 +63,7 @@ export default {
         left: 20,
       },
       checked: true,
+      loading: true,
     };
   },
   mounted() {
@@ -121,10 +125,11 @@ export default {
           .attr("data-location", (d) => d.properties.name.replaceAll(" ", ""))
           .attr("d", (d) => generatorUS(d))
           .attr("fill", "#ffffff")
-          .on("click", (e, d) => {
-            this.handleStateClick(e, d);
+          .on("click", (e) => {
+            this.handleStateClick(e);
           });
       }
+      this.loading = false;
     },
     handleStateClick(event) {
       // highlight state
@@ -135,12 +140,14 @@ export default {
       ]);
     },
     handleStateActive(data) {
+      console.log("data :>> ", data);
+
       d3.select(this.$refs.choroplethContent)
         .selectAll("path")
         .attr("fill", "#ffffff");
       // I Just give a color here
 
-      if (this.continent === "US") {
+      if (this.checked === false) {
         [...new Set(data)].forEach((el) => {
           d3.select(`#State${el.state.replaceAll(" ", "")}`).attr(
             "fill",
@@ -149,6 +156,7 @@ export default {
         });
       } else {
         [...new Set(data)].forEach((el) => {
+          console.log("el eu :>> ", el);
           d3.select(`#${el.state.replaceAll(" ", "")}`).attr("fill", el.color);
         });
       }
@@ -194,6 +202,7 @@ export default {
   watch: {
     selectedStates: {
       handler() {
+        console.log('this.allStates :>> ', this.allStates);
         this.handleStateActive(
           this.allStates.filter((el) => this.selectedStates.includes(el.state))
         );
@@ -204,12 +213,11 @@ export default {
         this.reset();
         const continentName = this.checked ? "EU" : "US";
         this.$store.dispatch("changeContinent", continentName);
+        if(!this.checked){
+          // this.$store.commit("changeAllStates", states)
+        }
+        console.log('this.continent :>> ', this.continent);
         this.drawMap();
-      },
-    },
-    data: {
-      handler() {
-        // console.log('object :>> ', this.data);
       },
     },
   },

@@ -112,6 +112,11 @@ export default {
     },
   },
   computed: {
+    continent: {
+      get() {
+        return this.$store.getters.continent;
+      },
+    },
     educationRates: {
       get() {
         return this.$store.getters.educationRates;

@@ -2,20 +2,21 @@
   <div class="vis-component" ref="chart">
     <div class="placeholder">
       <h2>{{ header }}</h2>
-      <p>
+      <p v-if="!loading">
         <strong>Hold Click &amp; Drag</strong> (<abbr
           title="Fancy name for drawing a rectangular area with a mouse."
           >brush</abbr
         >) over the points or <strong>click</strong> them to color states in the
         map.
       </p>
-      <p>
+      <p v-if="!loading">
         showing date:
         <abbr
           title="Date purposefully chosen to caputure statistics released on the same day by as many countries as possible"
           ><strong>{{ this.processedData[0].date }}</strong>
         </abbr>
       </p>
+      <b-spinner v-if="loading" variant="primary" label="Spinning"></b-spinner>
     </div>
     <svg
       ref="chart"
@@ -33,7 +34,7 @@
     <div>
       <b-button
         pill
-        v-on:click.prevent="reset()"
+        v-on:click="hardReset()"
         :disabled="selectedLocations.length === 0"
         variant="outline-danger"
         ><b-icon icon="x-circle" class="mr-1" variant="danger"></b-icon>Cancel
@@ -70,12 +71,13 @@ export default {
         "#ace4e4",
         "#5ac8c8",
       ],
+      loading: true,
       rectangles: [],
       brush: [],
     };
   },
   mounted() {
-    this.constructChart();
+    // this.constructChart();
   },
   methods: {
     constructChart() {
@@ -88,6 +90,7 @@ export default {
       this.yAxis();
       this.plotData();
       this.addBrush();
+      this.loading = false;
     },
     addBrush() {
       let brush = d3
@@ -99,12 +102,16 @@ export default {
             this.svgHeight - this.svgPadding.top - this.svgPadding.bottom,
           ],
         ])
-        .on("brush start end", (e) => {
+        .on("end", (e) => {
           this.addBrushedPoints(e);
+        })
+        .on("start", () => {
+          this.hardReset();
+          d3.selectAll("circle.point.selected").classed("selected", false);
         });
 
       d3.select(this.$refs.brush).call(brush);
-      this.brush.push(brush);
+      this.brush = brush;
     },
     addBrushedPoints(e) {
       let x_0 = e.selection[0][0];
@@ -119,6 +126,7 @@ export default {
           return cx >= x_0 && cx < x_1 && cy >= y_0 && cy < y_1;
         }
       );
+      console.log("selected :>> ", selected);
 
       if (selected.length !== 0) {
         selected.forEach((el) => {
@@ -129,7 +137,7 @@ export default {
           );
         });
       } else {
-        this.reset();
+        this.hardReset();
       }
     },
     drawBackground() {
@@ -203,56 +211,6 @@ export default {
           .attr("fill", "black")
           .text(`${this.$props.labelY}`);
       }
-    },
-    plotDataUS() {
-      const allStates = [];
-
-      const points = d3.select(this.$refs.points);
-      points
-        .selectAll(".point")
-        .data(this.merged)
-        .join("circle")
-        .attr("class", "point")
-        .transition()
-        .duration(250)
-        .attr("cx", (d) => {
-          return this.xScale(d.edu);
-        })
-        .attr("cy", (d) => {
-          return this.yScale(d.income);
-        })
-        .attr("data-color", (d) => {
-          // color of each state is computed here
-          let color = this.computeColor(d);
-          allStates.push({ state: d.state.replaceAll(" ", ""), color: color });
-          return color;
-        })
-        .attr("r", 4.5)
-        .attr("data-target", (d) => d.state.replaceAll(" ", ""));
-
-      // dispatch message for store with computed colors
-      this.$store.dispatch("changeAllStates", allStates);
-
-      points
-        .selectAll(".point")
-        .data(this.merged)
-        .on("mouseover", (e) => {
-          this.handleDotHover(e.target.dataset.target);
-        })
-        .on("mouseout", (e) => {
-          this.handleDotHover(e.target.dataset.target);
-        })
-        .on("click", (e) => this.handleClick(e));
-
-      points
-        .selectAll(".point-label")
-        .data(this.merged)
-        .join("text")
-        .attr("x", (d) => this.xScale(d.edu) + 1)
-        .attr("y", (d) => this.yScale(d.income) - 6)
-        .attr("id", (d) => d.state.replaceAll(" ", ""))
-        .attr("class", "point-label")
-        .text((d) => d.state);
     },
     plotData() {
       const allStates = [];
@@ -370,12 +328,14 @@ export default {
     dataMin(data) {
       return d3.min(data, (d) => d.value);
     },
-    reset() {
+    hardReset() {
+      // this.brush.clear(d3.select(this.$refs.brush));
+      // d3.select(this.$refs.brush).remove();
+      d3.select(this.$refs.brush).call(this.brush.move, null);
+      console.log("brush :>> ", this.brush);
       d3.selectAll("circle.point.selected").classed("selected", false);
       this.$store.dispatch("reset");
       this.constructChart();
-      d3.select(this.$refs.brush).call(this.brush[0].move, null);
-      this.brush = [];
     },
   },
   // reactive data
@@ -432,7 +392,6 @@ export default {
           ];
       } else {
         domain = [
-          // d3.min(this.data.map((el) => el.vaccinated)) * 0.95,
           0,
           d3.max(this.processedData.map((el) => el.vaccinated)) * 1.1,
         ];
@@ -454,11 +413,7 @@ export default {
           parseInt(this.dataMax(this.personalIncome)) * 1.05,
         ];
       } else {
-        domain = [
-          // d3.min(this.data.map((el) => el.deaths)) * 0.95,
-          0,
-          d3.max(this.processedData.map((el) => el.deaths)) * 1.1,
-        ];
+        domain = [0, d3.max(this.processedData.map((el) => el.deaths)) * 1.1];
       }
       return d3
         .scaleLinear()
@@ -469,15 +424,24 @@ export default {
         .domain(domain);
     },
     processedData() {
-      return this.data.filter(
+      let processed = this.data.filter(
         (el) => !isNaN(el.deaths) && el.date === "10-10-21"
       );
+      // console.log("this.data :>> ", processed);
+      // console.log("this.continent :>> ", this.continent);
+      return processed;
+    },
+    continent: {
+      get() {
+        return this.$store.getters.continent;
+      }
     },
   },
   watch: {
     continent: {
       handler() {
-        this.constructChart();  
+        // this.constructChart();
+        console.log("this.continent :>> ", this.continent);
       },
     },
     data: {
