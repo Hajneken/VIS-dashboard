@@ -22,8 +22,8 @@
         <div class="col-md-6">
           <Scatterplot
             header="Effect of vaccines on COVID-19 deaths"
-            labelX="People vaccinated per hundred"
-            labelY="Total deaths per million"
+            labelX="People vaccinated per hundred people"
+            labelY="New Deaths over 7 days per million people"
           />
         </div>
       </div>
@@ -39,13 +39,13 @@
       <div class="row mb-5">
         <div class="col-md-6">
           <LineChart
-            header="Full vaccination (2 doses) over time: detailed view"
+            header="Full vaccination in countries (2 doses) over time: detailed view"
             labelX="Time"
             labelY="Vaccinated people per hundered"
           />
         </div>
         <div class="col-md-6">
-          <BarChart header="Risk groups in population" labelY="Shares in %" />
+          <BarChart header="Risk groups in populations" labelY="in %" />
         </div>
       </div>
     </div>

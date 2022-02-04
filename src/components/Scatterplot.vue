@@ -13,7 +13,9 @@
         <span v-if="this.continent !== 'US'">showing date:</span>
         <abbr
           title="Date purposefully chosen to caputure statistics released on the same day by as many countries as possible"
-          ><strong>{{` ${this.processedData[0].date}`}}</strong>
+          ><strong v-if="this.continent !== 'US'">{{
+            ` ${this.processedData[0].date}`
+          }}</strong>
         </abbr>
       </p>
       <b-spinner v-if="loading" variant="primary" label="Spinning"></b-spinner>
@@ -77,7 +79,7 @@ export default {
     };
   },
   mounted() {
-    this.constructChart();
+    // this.constructChart();
   },
   methods: {
     constructChart() {
@@ -199,7 +201,7 @@ export default {
     },
     yAxis() {
       const selection = d3.select(this.$refs.y);
-      selection.call(d3.axisLeft(this.yScale).tickFormat((d) => d / 1000));
+      selection.call(d3.axisLeft(this.yScale));
       if (!document.querySelector(".y-axis")) {
         d3.select(this.$refs.y)
           .append("text")
@@ -240,7 +242,9 @@ export default {
         })
         .attr("data-color", (d) => {
           // color of each state is computed here
+
           let color = this.computeColor(d);
+
           if (this.continent === "US") {
             allStates.push({
               state: d.state.replaceAll(" ", ""),
@@ -346,7 +350,10 @@ export default {
       }
 
       candidates.forEach((index) => {
-        if (y >= this.rectangles[index].y_0 && y < this.rectangles[index].y_1) {
+        if (
+          y >= this.rectangles[index].y_0 &&
+          y <= this.rectangles[index].y_1
+        ) {
           colorIndex = index;
         }
       });
@@ -473,9 +480,46 @@ export default {
         processed = this.merged;
       } else {
         processed = this.data.filter(
-          (el) => !isNaN(el.deaths) && el.date === "10-10-21"
+          (el) => !isNaN(el.deaths) && el.date === "12-12-21"
         );
       }
+      // console.log('processed :>> ', processed);
+      // TOP: 12-12-21, 23-05-21, 18-05-21, 26-03-21
+
+      // computing best dates
+      // let allWithAll = this.allCountries.map((el) => {
+      //   return {
+      //     location: el,
+      //     data: this.data.filter((ele) => ele.location === el),
+      //   };
+      // });
+
+      // let max = 0;
+      // let ele;
+
+      // allWithAll.forEach((el) => {
+      //   if (el.data.length > max) {
+      //     ele = el;
+      //     max = el.data.length;
+      //   }
+      // });
+
+      // let allDates = ele.data.map((el) => el.date);
+
+      // let res = [];
+      // let temp = [];
+      // let dis = [];
+
+      // allDates.forEach(
+      //   (date) => {
+      //     temp = this.data.filter((el) => el.date === date)
+      //     if(temp.length > res.length){
+      //       res = temp
+      //       dis.push(temp)
+      //     }
+      //   }
+      // );
+
       return processed;
     },
     continent: {

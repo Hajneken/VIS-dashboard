@@ -5,7 +5,7 @@
       <b-spinner v-if="loading" variant="primary" label="Spinning"></b-spinner>
     </div>
     <p v-if="!loading">
-      Adjust the time frame by grabbing handle bars at the edges of greyed out
+      Adjust the time frame of the detailed view below by grabbing handle bars at the edges of greyed out
       area
     </p>
     <svg id="TimeFilter" :width="svgWidth" :height="svgHeight">
@@ -39,7 +39,7 @@ export default {
     };
   },
   mounted() {
-    console.log("Time filter mounted ...");
+    // console.log("Time filter mounted ...");
   },
   methods: {
     constructChart() {
